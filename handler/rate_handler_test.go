@@ -11,7 +11,11 @@ func TestGetRate(t *testing.T) {
 	request := httptest.NewRequest("GET", "/rate?from=USD&to=BRL", nil)
 	response := httptest.NewRecorder()
 
-	handler.GetRate(response, request)
+	h := handler.GetRate(func(from string, to string) (float64, error) {
+		return 5.44, nil
+	})
+
+	h.ServeHTTP(response, request)
 
 	result := response.Result()
 	if result.StatusCode != 200 {

@@ -7,6 +7,8 @@ import (
 	"net/http"
 )
 
+type RateFunc func(string, string) (float64, error)
+
 func Rate(from string, to string) (float64, error) {
 	url := fmt.Sprintf("https://api.ratesapi.io/api/latest?base=%s&symbols=%s", from, to)
 
