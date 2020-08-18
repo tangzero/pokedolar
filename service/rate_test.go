@@ -1,10 +1,9 @@
 package service_test
 
 import (
-	"errors"
 	"fmt"
+	"gopkg.in/h2non/gock.v1"
 	"net/http"
-	"net/http/httptest"
 	"pokedolar/service"
 	"testing"
 )
@@ -22,7 +21,14 @@ func TestRatings(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(fmt.Sprintf("from_%s_to_%s", c.from, c.to), func(t *testing.T) {
-			http.DefaultClient.Transport = &mockHTTP{c}
+			defer gock.Off() // Flush pending mocks after test execution
+
+			gock.New("https://api.ratesapi.io").
+				Get("/api/latest").
+				MatchParam("base", c.from).
+				MatchParam("symbols", c.to).
+				Reply(200).
+				BodyString(fmt.Sprintf("{ \"rates\": { \"%s\": %f } }", c.to, c.expected))
 
 			rate, err := service.Rate(c.from, c.to)
 
@@ -41,19 +47,4 @@ type testCase struct{
 	from string
 	to string
 	expected float64
-}
-
-type mockHTTP struct {
-	test testCase
-}
-
-func (m *mockHTTP) RoundTrip(r *http.Request) (*http.Response, error) {
-	query := r.URL.Query()
-	if query.Get("base") == m.test.from && query.Get("symbols") == m.test.to {
-		rec := httptest.NewRecorder()
-		rec.Code = 200
-		fmt.Fprintf(rec.Body, "{ \"rates\": { \"%s\": %f } }", m.test.to, m.test.expected)
-		return rec.Result(), nil
-	}
-	return nil, errors.New("not found")
 }
