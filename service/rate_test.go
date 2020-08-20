@@ -2,12 +2,12 @@ package service_test
 
 import (
 	"fmt"
-	"gopkg.in/h2non/gock.v1"
 	"net/http"
 	"pokedolar/service"
 	"testing"
-)
 
+	"gopkg.in/h2non/gock.v1"
+)
 
 func TestRatings(t *testing.T) {
 	t.Cleanup(func() {
@@ -28,7 +28,7 @@ func TestRatings(t *testing.T) {
 				MatchParam("base", c.from).
 				MatchParam("symbols", c.to).
 				Reply(200).
-				BodyString(fmt.Sprintf("{ \"rates\": { \"%s\": %f } }", c.to, c.expected))
+				BodyString(fmt.Sprintf(`{ "rates": { "%s": %f } }`, c.to, c.expected))
 
 			rate, err := service.Rate(c.from, c.to)
 
@@ -43,8 +43,8 @@ func TestRatings(t *testing.T) {
 	}
 }
 
-type testCase struct{
-	from string
-	to string
+type testCase struct {
+	from     string
+	to       string
 	expected float64
 }
